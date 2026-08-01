@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PulseRoute AI - Intelligent Traffic Management & Emergency Green Corridor</title>
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Leaflet OpenStreetMap CSS & JS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- Custom Styles -->
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col font-sans">
+
+  <!-- Top Navbar -->
+  <header class="bg-slate-900/90 border-b border-slate-800 backdrop-blur sticky top-0 z-50 px-6 py-3 flex items-center justify-between shadow-lg">
+    <div class="flex items-center space-x-4">
+      <div class="flex items-center space-x-2">
+        <span class="text-2xl">🚦</span>
+        <h1 class="text-xl font-extrabold tracking-wider bg-gradient-to-r from-cyan-400 to-emerald-400 bg-clip-text text-transparent">
+          PulseRoute AI <span class="text-xs font-normal text-slate-400">v3.0</span>
+        </h1>
+      </div>
+      <!-- Centralized State Banner -->
+      <div class="flex items-center space-x-2 border-l border-slate-700 pl-4">
+        <span class="text-xs text-slate-400 font-semibold">SYSTEM STATE:</span>
+        <span id="system-state-badge" class="px-3 py-1 rounded-full text-xs font-bold bg-blue-900/60 text-blue-300 border border-blue-500">
+          NORMAL
+        </span>
+      </div>
+    </div>
+
+    <!-- Right Controls -->
+    <div class="flex items-center space-x-4">
+      <div class="flex items-center space-x-2 bg-slate-800/60 px-3 py-1.5 rounded-lg border border-slate-700">
+        <span id="ws-status" class="pulse-dot green" title="WebSocket Live"></span>
+        <span class="text-xs text-slate-300 font-medium">WS Live Engine</span>
+      </div>
+      <button onclick="toggleView('admin')" class="px-4 py-1.5 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-xs font-bold transition shadow-md">
+        Admin Dashboard
+      </button>
+      <button onclick="toggleView('ambulance')" class="px-4 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-xs font-bold transition shadow-md">
+        Ambulance HUD
+      </button>
+    </div>
+  </header>
+
+  <!-- MAIN ADMIN DASHBOARD -->
+  <main id="admin-view" class="flex-1 p-6 space-y-6 max-w-[1700px] w-full mx-auto">
+    
+    <!-- KPI Row -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div class="glass-panel p-4 flex items-center justify-between">
+        <div>
+          <p class="text-xs text-slate-400 font-semibold uppercase">Live Traffic Vehicles</p>
+          <h3 id="kpi-vehicles" class="text-2xl font-bold text-cyan-400 mt-1">1,420</h3>
+        </div>
+        <span class="text-3xl">🚗</span>
+      </div>
+      <div class="glass-panel p-4 flex items-center justify-between">
+        <div>
+          <p class="text-xs text-slate-400 font-semibold uppercase">Avg Wait Reduction</p>
+          <h3 id="kpi-reduction" class="text-2xl font-bold text-emerald-400 mt-1">-34.5%</h3>
+        </div>
+        <span class="text-3xl">⚡</span>
+      </div>
+      <div class="glass-panel p-4 flex items-center justify-between">
+        <div>
+          <p class="text-xs text-slate-400 font-semibold uppercase">Active Corridors</p>
+          <h3 id="kpi-corridors" class="text-2xl font-bold text-amber-400 mt-1">1 Active</h3>
+        </div>
+        <span class="text-3xl">🚑</span>
+      </div>
+      <div class="glass-panel p-4 flex items-center justify-between">
+        <div>
+          <p class="text-xs text-slate-400 font-semibold uppercase">EMS Delay Saved</p>
+          <h3 id="kpi-delay-saved" class="text-2xl font-bold text-purple-400 mt-1">8.4 min</h3>
+        </div>
+        <span class="text-3xl">⏱️</span>
+      </div>
+    </div>
+
+    <!-- Center Grid: Intersection Canvas + OpenStreetMap -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+      
+      <!-- Left 7 cols: Smart Intersection & Explainable AI -->
+      <div class="lg:col-span-7 space-y-6">
+        
+        <!-- Smart Intersection Panel -->
+        <div class="glass-panel p-5 space-y-4">
+          <div class="flex items-center justify-between">
+            <h2 class="text-lg font-bold flex items-center space-x-2 text-slate-200">
+              <span>🎯</span> <span>Smart Intersection Visualizer</span>
+            </h2>
+            <select id="junction-select" class="bg-slate-900 border border-slate-700 text-xs text-cyan-300 font-semibold px-3 py-1.5 rounded-lg focus:outline-none focus:border-cyan-500">
+              <option value="J1_BEGUMPET">J1 - Begumpet Junction</option>
+              <option value="J2_PANJAGUTTA">J2 - Panjagutta Circle</option>
+              <option value="J3_BANJARA_HILLS">J3 - Banjara Hills Hospital Gate</option>
+            </select>
+          </div>
+
+          <!-- Canvas Visualizer -->
+          <div class="relative flex justify-center bg-slate-950 p-2 rounded-xl border border-slate-800">
+            <canvas id="intersection-canvas" width="560" height="340" class="rounded-lg shadow-inner"></canvas>
+          </div>
+        </div>
+
+        <!-- Explainable AI Panel -->
+        <div class="glass-panel p-5 space-y-4">
+          <h2 class="text-lg font-bold flex items-center space-x-2 text-cyan-400">
+            <span>🧠</span> <span>Explainable AI Decision Intelligence</span>
+          </h2>
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-3 text-center">
+            <div class="bg-slate-900/80 p-3 rounded-lg border border-slate-800">
+              <p class="text-xs text-slate-400">Target Lane</p>
+              <p id="xai-green-lane" class="text-lg font-extrabold text-emerald-400 mt-1">EAST</p>
+            </div>
+            <div class="bg-slate-900/80 p-3 rounded-lg border border-slate-800">
+              <p class="text-xs text-slate-400">Lane Vehicles</p>
+              <p id="xai-total-vehicles" class="text-lg font-extrabold text-cyan-400 mt-1">24</p>
+            </div>
+            <div class="bg-slate-900/80 p-3 rounded-lg border border-slate-800">
+              <p class="text-xs text-slate-400">Queue Length</p>
+              <p id="xai-queue-length" class="text-lg font-extrabold text-amber-400 mt-1">139.2 m</p>
+            </div>
+            <div class="bg-slate-900/80 p-3 rounded-lg border border-slate-800">
+              <p class="text-xs text-slate-400">AI Confidence</p>
+              <p id="xai-confidence" class="text-lg font-extrabold text-purple-400 mt-1">96.5%</p>
+            </div>
+          </div>
+          <div id="xai-reasoning" class="text-sm text-cyan-300 font-medium bg-cyan-950/40 p-3 rounded-lg border border-cyan-800/50">
+            Phase assigned to EAST Lane based on highest density (24 vehicles, MEDIUM congestion). Allocated 35s green cycle with 96.5% AI confidence.
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Right 5 cols: OpenStreetMap Pane + Live Timeline -->
+      <div class="lg:col-span-5 space-y-6">
+        
+        <!-- OpenStreetMap Pane -->
+        <div class="glass-panel p-5 space-y-4">
+          <div class="flex items-center justify-between">
+            <h2 class="text-lg font-bold flex items-center space-x-2 text-slate-200">
+              <span>🗺️</span> <span>OpenStreetMap Emergency Corridor</span>
+            </h2>
+            <span class="text-xs text-slate-400">Hyderabad Metro Area</span>
+          </div>
+          <div id="osm-map" class="h-[320px] rounded-xl border border-slate-800 overflow-hidden shadow-md"></div>
+        </div>
+
+        <!-- Live Timeline Tracer -->
+        <div class="glass-panel p-5 space-y-3">
+          <h2 class="text-lg font-bold flex items-center space-x-2 text-slate-200">
+            <span>📜</span> <span>Timeline Audit Log</span>
+          </h2>
+          <div id="timeline-container" class="h-[220px] overflow-y-auto pr-2 space-y-2">
+            <!-- Dynamic items rendered via app.js -->
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- AMBULANCE DRIVER PORTAL / HUD (Hidden by default) -->
+  <main id="ambulance-view" class="hidden flex-1 p-6 max-w-4xl w-full mx-auto space-y-6">
+    <div class="glass-panel p-6 space-y-6">
+      
+      <div class="flex items-center justify-between border-b border-slate-800 pb-4">
+        <div>
+          <h2 class="text-2xl font-extrabold text-emerald-400 flex items-center space-x-2">
+            <span>🚑</span> <span>Ambulance Driver Emergency HUD</span>
+          </h2>
+          <p class="text-xs text-slate-400 mt-1">Vehicle TS-09-EMS-108 | Unit 402 Commander</p>
+        </div>
+        <div class="text-right">
+          <span class="text-xs text-slate-400">Target Hospital:</span>
+          <p class="text-sm font-bold text-slate-200">Banjara Hills Hospital</p>
+        </div>
+      </div>
+
+      <!-- Action Controls -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <button id="btn-start-emergency" class="py-5 px-6 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-extrabold text-lg shadow-xl tracking-wider transition transform hover:scale-[1.02]">
+          🚨 START EMERGENCY CORRIDOR
+        </button>
+        <button id="btn-stop-emergency" class="py-5 px-6 rounded-xl bg-slate-800 hover:bg-slate-700 text-rose-400 font-extrabold text-lg border border-rose-500/30 transition">
+          🛑 CANCEL MISSION
+        </button>
+      </div>
+
+      <!-- Telemetry Gauges -->
+      <div class="grid grid-cols-3 gap-4 text-center">
+        <div class="bg-slate-900/90 p-4 rounded-xl border border-slate-800">
+          <p class="text-xs text-slate-400 font-semibold">Vehicle Speed</p>
+          <h3 id="hud-speed" class="text-3xl font-black text-cyan-400 mt-1">52.0 km/h</h3>
+        </div>
+        <div class="bg-slate-900/90 p-4 rounded-xl border border-slate-800">
+          <p class="text-xs text-slate-400 font-semibold">Estimated ETA</p>
+          <h3 id="hud-eta" class="text-3xl font-black text-amber-400 mt-1">140s</h3>
+        </div>
+        <div class="bg-slate-900/90 p-4 rounded-xl border border-slate-800">
+          <p class="text-xs text-slate-400 font-semibold">Route Progress</p>
+          <h3 id="hud-progress-text" class="text-3xl font-black text-emerald-400 mt-1">35%</h3>
+        </div>
+      </div>
+
+      <!-- Next Junction Progress Bar -->
+      <div class="bg-slate-900/90 p-4 rounded-xl border border-slate-800 space-y-2">
+        <div class="flex justify-between text-xs font-semibold">
+          <span class="text-slate-400">Next Upcoming Junction:</span>
+          <span id="hud-next-junction" class="text-emerald-400">Panjagutta Circle (1.2 km away)</span>
+        </div>
+        <div class="w-full bg-slate-800 h-3 rounded-full overflow-hidden">
+          <div id="hud-progress" class="bg-emerald-500 h-full w-[35%] transition-all duration-500 shadow-glow"></div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <script>
+    function toggleView(view) {
+      const adminEl = document.getElementById('admin-view');
+      const ambEl = document.getElementById('ambulance-view');
+      if (view === 'admin') {
+        adminEl.classList.remove('hidden');
+        ambEl.classList.add('hidden');
+      } else {
+        adminEl.classList.add('hidden');
+        ambEl.classList.remove('hidden');
+      }
+    }
+  </script>
+  <script src="app.js"></script>
+</body>
+</html>

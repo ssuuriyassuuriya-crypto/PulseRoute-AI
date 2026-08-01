@@ -1,0 +1,105 @@
+/* PulseRoute AI System (v3.0) - High-Tech Carbon Dark UI */
+
+:root {
+  --bg-dark: #0b0f17;
+  --panel-bg: rgba(18, 26, 41, 0.85);
+  --panel-border: rgba(45, 62, 92, 0.5);
+  --accent-cyan: #00f0ff;
+  --accent-green: #00ff88;
+  --accent-red: #ff3366;
+  --accent-yellow: #ffcc00;
+  --accent-blue: #3b82f6;
+  --text-main: #e2e8f0;
+  --text-muted: #94a3b8;
+}
+
+body {
+  background-color: var(--bg-dark);
+  color: var(--text-main);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+}
+
+/* Glassmorphism Card Panels */
+.glass-panel {
+  background: var(--panel-bg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--panel-border);
+  border-radius: 12px;
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4);
+}
+
+/* Glowing Neon Text and Badges */
+.glow-cyan {
+  color: var(--accent-cyan);
+  text-shadow: 0 0 10px rgba(0, 240, 255, 0.5);
+}
+
+.glow-green {
+  color: var(--accent-green);
+  text-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
+}
+
+.glow-red {
+  color: var(--accent-red);
+  text-shadow: 0 0 10px rgba(255, 51, 102, 0.5);
+}
+
+/* Status Indicator Pulsing Dot */
+.pulse-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  display: inline-block;
+  animation: pulse 1.5s infinite ease-in-out;
+}
+
+.pulse-dot.green { background-color: var(--accent-green); box-shadow: 0 0 10px var(--accent-green); }
+.pulse-dot.red { background-color: var(--accent-red); box-shadow: 0 0 10px var(--accent-red); }
+.pulse-dot.yellow { background-color: var(--accent-yellow); box-shadow: 0 0 10px var(--accent-yellow); }
+
+@keyframes pulse {
+  0% { transform: scale(0.95); opacity: 0.8; }
+  50% { transform: scale(1.2); opacity: 1; }
+  100% { transform: scale(0.95); opacity: 0.8; }
+}
+
+/* Intersection Canvas & Signal Lights */
+.signal-badge {
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-weight: 700;
+  font-size: 0.85rem;
+  letter-spacing: 0.5px;
+}
+
+.signal-badge.GREEN { background: rgba(0, 255, 136, 0.2); color: var(--accent-green); border: 1px solid var(--accent-green); }
+.signal-badge.YELLOW { background: rgba(255, 204, 0, 0.2); color: var(--accent-yellow); border: 1px solid var(--accent-yellow); }
+.signal-badge.RED { background: rgba(255, 51, 102, 0.2); color: var(--accent-red); border: 1px solid var(--accent-red); }
+
+/* Timeline Log Items */
+.timeline-item {
+  border-left: 2px solid var(--accent-cyan);
+  padding-left: 12px;
+  margin-bottom: 12px;
+  font-size: 0.85rem;
+}
+
+/* Custom Scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: rgba(15, 23, 42, 0.6);
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(51, 65, 85, 0.8);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--accent-cyan);
+}

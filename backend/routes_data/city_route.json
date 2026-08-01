@@ -1,0 +1,14 @@
+{
+  "route_id": "begumpet_to_banjara_hospital",
+  "name": "Begumpet to Banjara Hills Hospital Emergency Route",
+  "total_distance_km": 5.4,
+  "waypoints": [
+    {"lat": 17.4447, "lng": 78.4664, "junction_id": "J1_BEGUMPET", "name": "Begumpet Junction"},
+    {"lat": 17.4410, "lng": 78.4630, "junction_id": null, "name": "Raj Bhavan Road Turn"},
+    {"lat": 17.4350, "lng": 78.4580, "junction_id": null, "name": "Somajiguda Flyover"},
+    {"lat": 17.4256, "lng": 78.4513, "junction_id": "J2_PANJAGUTTA", "name": "Panjagutta Circle"},
+    {"lat": 17.4210, "lng": 78.4470, "junction_id": null, "name": "Nagarjuna Circle"},
+    {"lat": 17.4180, "lng": 78.4440, "junction_id": null, "name": "Road No. 1 Banjara Hills"},
+    {"lat": 17.4156, "lng": 78.4412, "junction_id": "J3_BANJARA_HILLS", "name": "Banjara Hills Hospital Gate"}
+  ]
+}
