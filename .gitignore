@@ -9,10 +9,7 @@ frontend/node_modules/
 frontend/dist/
 frontend/*.tsbuildinfo
 
-# Runtime vision assets
-backend/data/uploads/
-backend/data/ultralytics/
-backend/models/*.pt
+
 
 # Local configuration
 .env
