@@ -1,10 +1,10 @@
 {
-  "route_id": "panjagutta_to_hospital",
-  "name": "Panjagutta to Hospital Short Corridor",
-  "total_distance_km": 2.2,
-  "waypoints": [
-    {"lat": 17.4256, "lng": 78.4513, "junction_id": "J2_PANJAGUTTA", "name": "Panjagutta Circle"},
-    {"lat": 17.4210, "lng": 78.4470, "junction_id": null, "name": "Nagarjuna Circle"},
-    {"lat": 17.4156, "lng": 78.4412, "junction_id": "J3_BANJARA_HILLS", "name": "Banjara Hills Hospital Gate"}
+  "hospital": {"name": "PulseCare General Hospital", "latitude": 12.9722, "longitude": 77.5946},
+  "route": [
+    {"junction": "J1 - Residency Road", "road": "North", "latitude": 12.9618, "longitude": 77.5901},
+    {"junction": "J2 - Richmond Circle", "road": "East", "latitude": 12.9645, "longitude": 77.5914},
+    {"junction": "J3 - MG Road", "road": "North", "latitude": 12.9672, "longitude": 77.5927},
+    {"junction": "J4 - Cubbon Road", "road": "West", "latitude": 12.9698, "longitude": 77.5938},
+    {"junction": "PulseCare General Hospital", "road": "South", "latitude": 12.9722, "longitude": 77.5946}
   ]
 }

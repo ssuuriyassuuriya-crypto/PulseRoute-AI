@@ -1,22 +1,21 @@
-# 💡 PulseRoute AI — Architectural Decision Records (ADRs)
+# Technical Decisions
 
----
+## Offline-first simulation
 
-## ADR 001: Thread-Safe Singleton State Manager
-- **Context:** The system requires real-time coordination between YOLO video ingestion, signal orchestration loops, and emergency GPS telemetry.
-- **Decision:** Implemented `StateManager` as a thread-safe Singleton using `threading.RLock()`.
-- **Consequences:** Eliminates race conditions across async WebSocket threads and background simulation loops while keeping system state predictable.
+The MVP uses a bundled route and deterministic traffic observations. This keeps the demo operational without GPS hardware, external traffic feeds, or a computer-vision model download.
 
----
+## Central state manager
 
-## ADR 002: Unified WebSockets Endpoint (`/ws/dashboard`)
-- **Context:** Previous design used fragmented HTTP polling across separate endpoints for traffic signals, video counts, and ambulance location.
-- **Decision:** Unified all real-time streams into a single WebSocket endpoint `/ws/dashboard`.
-- **Consequences:** Reduces network overhead, enables instant UI updates under 100ms, and simplifies client synchronization.
+All domain services update a lock-protected in-memory state manager. REST endpoints, reports, and the dashboard WebSocket read from this one source to prevent competing live-state caches.
 
----
+## Role boundaries
 
-## ADR 003: Haversine Preemption Zone for Emergency Corridor
-- **Context:** Emergency light locking should occur ahead of approaching ambulances without permanently locking distant intersections.
-- **Decision:** Set a 1.5 km dynamic Haversine distance threshold to lock signals GREEN and automatically release locks once the vehicle passes (distance < 0.05 km).
-- **Consequences:** Provides smooth green wave preemption without stalling cross-traffic unnecessarily.
+Admins receive the full dashboard WebSocket and operational controls. Ambulance drivers receive only the mission functions permitted by the backend role policy.
+
+## Safe signal behavior
+
+Adaptive phases always move through yellow before a new green. Green-corridor locks take precedence over manual and adaptive modes, and release returns control to the scheduler.
+
+## Incremental frontend loading
+
+Operational routes use lazy loading. This keeps the Leaflet map and analytics chart libraries out of the initial login/dashboard bundle.

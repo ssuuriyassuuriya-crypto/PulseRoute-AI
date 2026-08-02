@@ -1,60 +1,83 @@
-# 🏗️ PulseRoute AI — System Architecture (v3.0)
+# Architecture
 
-PulseRoute AI is designed as a modular, decoupled Intelligent Traffic Management System (ITMS).
+## Module 1: platform core
 
----
-
-## 1. Centralized System State Machine
-
-The system core operates as a thread-safe global singleton state manager (`backend/state/state_manager.py`) transitioning between 6 key states:
-
-```
-[NORMAL]
-   │ (Traffic monitoring & adaptive density cycle)
-   ▼
-[EMERGENCY_REQUESTED]
-   │ (Ambulance driver logs mission & target hospital)
-   ▼
-[MISSION_ACTIVE]
-   │ (GPS tracking connected & route loaded)
-   ▼
-[GREEN_CORRIDOR_ACTIVE]
-   │ (Preemptive green light lock on upcoming junction)
-   ▼
-[HOSPITAL_REACHED]
-   │ (Ambulance clears final corridor junction)
-   ▼
-[ADAPTIVE_SCHEDULING_RESTORED]
-   │ (Locks released; returns to NORMAL)
-```
-
----
-
-## 2. Information Pipelines
-
-### A. Traffic Analytics Pipeline
 ```text
-[Video Stream / Camera] ──► [YOLOv8 Detection] ──► [ByteTrack Tracking] ──► [Region Mapping N/S/E/W]
-                                                                                      │
-                                                                                      ▼
-[Dashboard UI] ◄── [Unified WebSockets /ws/dashboard] ◄── [Orchestration Service] ◄── [Road Analytics Engine]
+HTTP request
+  -> API router (validation and response only)
+  -> Auth service / State manager
+  -> typed response envelope
 ```
 
-### B. Emergency Green Corridor Pipeline
+`StateManager` is the in-memory, lock-protected source of truth. Future traffic, signal, emergency, analytics, and WebSocket services will read and update its named state slices instead of maintaining parallel state.
+
+Authentication uses signed JWT bearer tokens and assigns either `ADMIN` or `AMBULANCE_DRIVER`. Route-level role guards are available for future protected routers.
+
+## Module 2: traffic analytics
+
 ```text
-[Ambulance Driver HUD] ──► [Emergency Dispatch API] ──► [GPS Simulator / Telemetry]
-                                                                    │
-                                                                    ▼
-[Leaflet Map / Signal Locks] ◄── [WebSockets Broadcast] ◄── [Green Corridor Preemption]
+Tracked observations -> RegionMapper -> TrafficService -> StateManager
+                                            |
+                                            v
+                                     AIDecisionService
 ```
 
----
+Observations use normalized bounding boxes. Their center is mapped to North, South, East, or West; the road pressure score combines vehicle count, estimated queue length, and average waiting time. The selected road includes a green duration, confidence value, and human-readable reason. These services are independent of YOLO and can therefore run fully offline with simulation data.
 
-## 3. Module Hierarchy
+## Module 3: adaptive signals
 
-- `backend/constants/`: Single source of truth for thresholds, timings, and routes.
-- `backend/state/`: Thread-safe global singleton state manager.
-- `backend/services/`: Decoupled business logic services (YOLO, Analytics, Orchestration, Green Corridor, Emergency, Simulation, Report, Timeline).
-- `backend/api/`: REST API route controllers.
-- `backend/main.py`: FastAPI application entry point & `/ws/dashboard` WebSocket server.
-- `frontend/`: Carbon dark single-page web app with HTML5 Canvas intersection visualizer & Leaflet OpenStreetMap renderer.
+```text
+AI decision -> AdaptiveSignalService -> green -> yellow -> next adaptive green
+                         |
+                         +-> StateManager -> /api/signals
+```
+
+The scheduler executes once per second inside the application lifespan. Manual overrides are protected by the admin role. Emergency locks are a service-level integration point for the green-corridor module and take precedence over both adaptive and manual modes.
+
+## Module 4: emergency dispatch
+
+```text
+Mission start -> GPS simulator -> current route junction -> GreenCorridorService -> emergency signal lock
+                       |                                                |
+                       +-> mission ETA/distance                          +-> adaptive restore on arrival
+```
+
+The route data is bundled in `backend/routes_data/hospital_route.json`, so no external GPS or map service is required. Both authenticated roles may start, stop, or prioritize a mission; all actions are logged in the central state manager.
+
+## Module 5: real-time delivery
+
+```text
+StateManager -> DashboardConnectionManager -> /ws/dashboard (one snapshot per second)
+      |
+      +-> Timeline API / Reports API / Health API
+```
+
+The dashboard socket requires an admin JWT supplied as the `token` query parameter. The report service derives metrics directly from central state, and the timeline exposes the bounded, chronological audit log.
+
+## Module 6: frontend foundation
+
+```text
+Login -> AuthContext -> protected admin / driver routes
+                      |
+                      +-> DashboardContext -> authenticated dashboard WebSocket -> live admin UI
+```
+
+The React frontend stores the signed-in session only for the browser session, separates admin and driver layouts, and uses the dashboard WebSocket as the admin UI's sole live state channel. The driver portal uses the narrow emergency API appropriate to its restricted role.
+
+## Module 7: operational views
+
+```text
+DashboardContext -> Smart Signals visualizer -> manual signal API
+                 -> Emergency map / corridor -> emergency mission API
+```
+
+The map route is a display copy of the bundled backend simulation route; operational state, ambulance position, signal status, and mission control results always remain backend-derived.
+
+## Module 8: vision, analytics, and reporting
+
+```text
+Demo traffic API -> vision detection view -> dashboard WebSocket -> analytics charts
+                                                        +-> report API -> CSV export
+```
+
+The demo control calls a deterministic backend generator rather than fabricating analytics in the browser. The visual bounding boxes are the actual observation payload returned from backend processing; charts consume the live WebSocket state, while reports are generated server-side and exported locally as CSV.

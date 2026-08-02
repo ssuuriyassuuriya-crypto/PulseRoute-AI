@@ -1,33 +1,11 @@
-# 🎬 PulseRoute AI — Demo Walkthrough Script
+# PulseRoute AI Demo Runbook
 
----
+1. Start the backend, then the frontend. Sign in as `admin` / `admin123`.
+2. Open **Demo Controls** and select **Reset simulation**.
+3. Open **Traffic Vision**, then select **Generate demo traffic**. The bounding boxes, road counts, AI decision, and adaptive signal recommendation update together.
+4. Open **Smart Signals**. Highlight the East approach and explain the AI decision. Demonstrate a manual override, then restore adaptive mode.
+5. Open **Emergency Dispatch**, select **Start mission**, and show the ambulance moving along the map while corridor junctions change state.
+6. Optionally use **Request high priority**, then show the current route and countdown in the driver portal after signing in as `driver` / `driver123`.
+7. When the ambulance reaches the hospital, show adaptive signals restored. Open **Reports** to download the current CSV and **Timeline** to review filtered events.
 
-## Step-by-Step Demo Routine for Presenters
-
-1. **Launch Backend Server:**
-   ```bash
-   python -m uvicorn backend.main:app --reload
-   ```
-
-2. **Open Dashboard:**
-   Open `frontend/index.html` in your web browser.
-
-3. **Demonstrate Normal Adaptive Signal Control:**
-   - Observe the **Admin Dashboard**.
-   - Note the **Smart 4-Way Intersection Visualizer** drawing active green lights, live countdown timers, and vehicle counters.
-   - Point out the **Explainable AI Decision Intelligence Panel** displaying total vehicle count, queue length, confidence score, and natural language reasoning.
-
-4. **Trigger Emergency Green Corridor:**
-   - Click **Ambulance HUD** button in top navbar.
-   - Click **START EMERGENCY CORRIDOR**.
-   - Switch back to **Admin Dashboard**.
-
-5. **Observe System State Transition & Green Corridor Lock:**
-   - Watch top banner transition from `NORMAL` ➔ `EMERGENCY_REQUESTED` ➔ `MISSION_ACTIVE` ➔ `GREEN_CORRIDOR_ACTIVE`.
-   - Observe the **OpenStreetMap Pane** showing the animated ambulance 🚑 moving smoothly along the Hyderabad route towards Banjara Hills Hospital 🏥.
-   - Observe the **Smart Intersection Canvas** display `CORRIDOR LOCKED 🚑` with green light override locked on the corridor lane.
-   - Point out the **Timeline Audit Log** recording state switches and preemption events.
-
-6. **Mission Completion & Restoration:**
-   - Once the ambulance reaches the hospital, observe state transition to `HOSPITAL_REACHED` and then `ADAPTIVE_SCHEDULING_RESTORED`.
-   - Intersection signals revert back to adaptive density scheduling.
+For a fresh run, return to **Demo Controls** and select **Reset simulation**.

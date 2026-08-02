@@ -1,0 +1,20 @@
+import { useState } from "react";
+import { Ambulance, MapPin, Navigation, Siren, Timer } from "lucide-react";
+import toast from "react-hot-toast";
+import { EmergencyMap } from "../components/EmergencyMap";
+import { useAuth } from "../contexts/AuthContext";
+import { useDashboard } from "../contexts/DashboardContext";
+import { api } from "../services/api";
+import type { Gps } from "../types";
+
+export function EmergencyDispatchPage() {
+  const { session } = useAuth();
+  const { state } = useDashboard();
+  const [busy, setBusy] = useState(false);
+  const mission = state?.mission && "mission_id" in state.mission ? state.mission : null;
+  const gps = state?.gps && "latitude" in state.gps ? state.gps as Gps : undefined;
+  const action = async (call: () => Promise<unknown>, message: string) => { setBusy(true); try { await call(); toast.success(message); } catch (error) { toast.error(error instanceof Error ? error.message : "Mission action failed"); } finally { setBusy(false); } };
+  return <section><div className="flex flex-wrap items-end justify-between gap-4"><div><p className="text-sm text-rose-300">DYNAMIC GREEN CORRIDOR</p><h1 className="mt-1 text-3xl font-semibold">Emergency dispatch</h1></div><span className={`rounded-full px-3 py-2 text-sm font-medium ${mission?.status === "ACTIVE" ? "bg-rose-500/15 text-rose-300" : "bg-white/5 text-slate-400"}`}>{mission?.status ?? "NO ACTIVE MISSION"}</span></div><div className="mt-7 grid gap-5 xl:grid-cols-[1.45fr_.7fr]"><EmergencyMap gps={gps} routeIndex={gps?.route_index} /><aside className="rounded-2xl border border-white/10 bg-[#161b22] p-5"><div className="flex items-center gap-2"><Siren className="text-rose-300" /><h2 className="font-semibold">Mission control</h2></div><dl className="mt-6 space-y-4"><Metric icon={Ambulance} label="Mission" value={mission?.mission_id ?? "Ready"} /><Metric icon={MapPin} label="Hospital" value={mission?.hospital ?? "PulseCare General Hospital"} /><Metric icon={Timer} label="ETA" value={mission ? `${Math.ceil(mission.eta_seconds / 60)} min` : "—"} /><Metric icon={Navigation} label="Current junction" value={gps?.current_junction ?? "Awaiting dispatch"} /></dl><div className="mt-6 grid gap-3"><button disabled={busy || mission?.status === "ACTIVE"} onClick={() => session && action(() => api.startMission(session.token), "Emergency mission started")} className="rounded-lg bg-rose-500 px-4 py-3 font-semibold text-white disabled:opacity-40">Start mission</button><button disabled={busy || mission?.status !== "ACTIVE"} onClick={() => session && action(() => api.requestPriority(session.token), "High priority enabled")} className="rounded-lg bg-amber-400 px-4 py-3 font-semibold text-slate-950 disabled:opacity-40">Request high priority</button><button disabled={busy || mission?.status !== "ACTIVE"} onClick={() => session && action(() => api.stopMission(session.token), "Mission stopped")} className="rounded-lg border border-white/15 px-4 py-3 font-semibold disabled:opacity-40">Stop mission</button></div></aside></div><article className="mt-5 rounded-2xl border border-white/10 bg-[#161b22] p-5"><h2 className="font-semibold">Green corridor progress</h2><div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-5">{["J1 · Residency Road", "J2 · Richmond Circle", "J3 · MG Road", "J4 · Cubbon Road", "PulseCare Hospital"].map((junction, index) => <div key={junction} className="rounded-lg bg-white/5 p-3"><p className="text-sm">{junction}</p><p className={`mt-2 text-xs font-semibold ${index === (gps?.route_index ?? -1) ? "text-emerald-300" : index < (gps?.route_index ?? 0) ? "text-slate-500" : "text-amber-300"}`}>{index === (gps?.route_index ?? -1) ? "GREEN" : index < (gps?.route_index ?? 0) ? "PASSED" : "WAITING"}</p></div>)}</div></article></section>;
+}
+
+function Metric({ icon: Icon, label, value }: { icon: typeof Ambulance; label: string; value: string }) { return <div className="flex gap-3"><Icon size={18} className="mt-0.5 text-emerald-300" /><div><dt className="text-xs text-slate-500">{label}</dt><dd className="mt-1 text-sm">{value}</dd></div></div>; }

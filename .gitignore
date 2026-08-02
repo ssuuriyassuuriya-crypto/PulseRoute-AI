@@ -1,0 +1,20 @@
+# Python
+backend/.venv/
+backend/**/__pycache__/
+backend/.pytest_cache/
+*.py[cod]
+
+# JavaScript
+frontend/node_modules/
+frontend/dist/
+frontend/*.tsbuildinfo
+
+# Runtime vision assets
+backend/data/uploads/
+backend/data/ultralytics/
+backend/models/*.pt
+
+# Local configuration
+.env
+.env.*
+!.env.example
